@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 
+import com.example.demo.exception.APIResponse;
 import com.example.demo.exception.FieldNotFoundException;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.*;
 
 @RestController
@@ -25,8 +27,8 @@ public class UserController {
 
     //create an user
     @PostMapping("/")
-    public ResponseEntity<User> createUser(@RequestBody User user)
-    {
+    public ResponseEntity<User> createUser(@Valid @RequestBody User user)
+     {
         User saveUser = this.userService.createUser(user);
         return new ResponseEntity<User>(saveUser, HttpStatus.CREATED);
     }
@@ -36,6 +38,12 @@ public class UserController {
     public ResponseEntity<List<User>> getAllUser()
     {
         return ResponseEntity.ok(this.userService.getAllUser());
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<User> getUser(@PathVariable Long userId)
+    {
+        return ResponseEntity.ok(this.userService.getUser(userId));
     }
 
 //    //sort by firstName
@@ -105,15 +113,31 @@ public class UserController {
     public List<User> getAllByDirections(@RequestParam(name = "field1", defaultValue = "firstName",required = true) String field1, @RequestParam(name = "field2", defaultValue = "firstName",required = false) String field2)
     {
         List<Sort.Order> orders = new ArrayList<>();
-        try{
+        try
+        {
         orders.add(new Sort.Order(Sort.Direction.ASC, field1));
         orders.add(new Sort.Order(Sort.Direction.DESC, field2));
         return this.userRepository.findAll(Sort.by(orders));
-        }catch (Exception ex){
+        }
+        catch (Exception ex)
+        {
             System.out.println(ex.toString());
             throw new FieldNotFoundException(ex.getMessage());
         }
     }
 
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<APIResponse> deleteUser(@PathVariable Long userId)
+    {
+        this.userService.deleteUser(userId);
+        return new ResponseEntity<APIResponse>(new APIResponse("User is Deleted Successfully",true),HttpStatus.OK);
+    }
+    @PutMapping("/{userId}")
+    public ResponseEntity<User> updateUser(@Valid @RequestBody User user, @PathVariable Long userId)
+    {
+        User updatedUser = this.userService.updateUser(user,userId);
+        return new ResponseEntity<>(updatedUser,HttpStatus.OK);
+
+    }
 
 }
